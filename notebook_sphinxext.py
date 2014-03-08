@@ -13,6 +13,7 @@ class NotebookDirective(Directive):
     """
     required_arguments = 1
     optional_arguments = 0
+    final_argument_whitespace = True
 
     def run(self):
         # check if raw html is supported
@@ -83,7 +84,6 @@ class NotebookDirective(Directive):
             os.remove(file)
 
         return [nb_node]
-
 
 
 class notebook_node(nodes.raw):
