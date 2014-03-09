@@ -13,8 +13,15 @@ class NotebookDirective(Directive):
     """
     required_arguments = 1
     optional_arguments = 0
+    final_argument_whitespace = True
 
     def run(self):
+        # check if there are spaces in the notebook name
+        nb_path = self.arguments[0]
+        if ' ' in nb_path:
+            raise ValueError(
+                "Cannot have spaces in notebook file name '{0}'".format(
+                    nb_path))
         # check if raw html is supported
         if not self.state.document.settings.raw_enabled:
             raise self.warning('"%s" directive disabled.' % self.name)
@@ -22,7 +29,7 @@ class NotebookDirective(Directive):
         # get path to notebook
         source_dir = os.path.dirname(
             os.path.abspath(self.state.document.current_source))
-        nb_basename = os.path.basename(self.arguments[0])
+        nb_basename = os.path.basename(nb_path)
         rst_file = self.state_machine.document.attributes['source']
         rst_dir = os.path.abspath(os.path.dirname(rst_file))
         nb_abs_path = os.path.join(rst_dir, nb_basename)
@@ -83,7 +90,6 @@ class NotebookDirective(Directive):
             os.remove(file)
 
         return [nb_node]
-
 
 
 class notebook_node(nodes.raw):
