@@ -128,6 +128,7 @@ def nb_to_html(nb_path):
 
     line_begin_strings = [
         'pre{',
+        'p{margin'
         ]
 
     header_lines = filter(
