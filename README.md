@@ -18,10 +18,9 @@ snippets inside of sphinx documentation using the rst `code-block` directive:
 
 ```
 
-While this does produce a syntax highlighted python script embedded in the docs,
-it does not run the code, provide any facilities for checking whether the code
-is correct, and generally makes it difficult to verify that the code included in
-documentation is correct.
+While this does produce a syntax highlighted python script embedded in a sphinx
+document, it does not run the code or provide any facilities for checking whether
+the code is correct.
 
 [IPython](http://ipython.org) notebooks offer a powerful environment for
 literate programming, with code input, output, and explanatary text embedded
@@ -50,8 +49,9 @@ This extension has two required dependencies:
 * IPython
 
 Note that all IPython dependencies (even the optional ones) must be
-installed. In particular, [pandoc](http://johnmacfarlane.net/pandoc/) must be
-available since nbconvert uses pandoc heavily.
+installed. In particular, [pandoc](http://johnmacfarlane.net/pandoc/) and
+[node.js](http://nodejs.org/) must be available since these are used by
+nbconvert.
 
 ## Examples
 
@@ -89,12 +89,12 @@ must be included in the source.
 
 ## Known issues
 
-These extensions use a version of the 'full' HTML output from the
-nbconvert HTML output. This includes the full notebook CSS which will probably
-conflict with your documentation theme. There are some monkeypatches to reduce
-the impact of the notebook style sheet on the document, but it is like that The
-monkeypatching is fragile.
+These extensions use a version of the 'full' HTML output from the nbconvert HTML
+output. This includes the full notebook CSS which will probably conflict with
+your documentation theme. There are some monkeypatches to reduce the impact of
+the notebook CSS on the document, but it is like that the monkeypatching is
+fragile.
 
 Images are embedded directly in the document HTML, just as they are in an
-IPython notebook. This can create a large search index since string
-representations of images are embedded in the search index.
+IPython notebook. This can easily create multi-megabytes pages that some web
+browsers have trouble with.

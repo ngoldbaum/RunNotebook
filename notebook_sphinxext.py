@@ -1,9 +1,10 @@
-import os, shutil, string, glob
+import os, shutil, string, glob, re
 from sphinx.util.compat import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
 from IPython.nbconvert import html, python
-from runipy.notebook_runner import NotebookRunner
+from IPython.nbformat.current import read, write
+from runipy.notebook_runner import NotebookRunner, NotebookError
 
 class NotebookDirective(Directive):
     """Insert an evaluated notebook into a document
@@ -12,7 +13,8 @@ class NotebookDirective(Directive):
     into html suitable for embedding in a Sphinx document.
     """
     required_arguments = 1
-    optional_arguments = 0
+    optional_arguments = 1
+    option_spec = {'skip_exceptions' : directives.flag}
 
     def run(self):
         # check if raw html is supported
@@ -29,6 +31,7 @@ class NotebookDirective(Directive):
 
         # Move files around.
         rel_dir = os.path.relpath(rst_dir, setup.confdir)
+        rel_path = os.path.join(rel_dir, nb_basename)
         dest_dir = os.path.join(setup.app.builder.outdir, rel_dir)
         dest_path = os.path.join(dest_dir, nb_basename)
 
@@ -43,6 +46,8 @@ class NotebookDirective(Directive):
 
         dest_path_eval = string.replace(dest_path, '.ipynb', '_evaluated.ipynb')
         dest_path_script = string.replace(dest_path, '.ipynb', '.py')
+        rel_path_eval = string.replace(nb_basename, '.ipynb', '_evaluated.ipynb')
+        rel_path_script = string.replace(nb_basename, '.ipynb', '.py')
 
         # Create python script vesion
         unevaluated_text = nb_to_html(nb_abs_path)
@@ -51,17 +56,16 @@ class NotebookDirective(Directive):
         f.write(script_text.encode('utf8'))
         f.close()
 
-        try:
-            evaluated_text = evaluate_notebook(nb_abs_path, dest_path_eval)
-        except:
-            # bail
-            return []
+        skip_exceptions = 'skip_exceptions' in self.options
+
+        evaluated_text = evaluate_notebook(nb_abs_path, dest_path_eval,
+                                           skip_exceptions=skip_exceptions)
 
         # Create link to notebook and script files
         link_rst = "(" + \
-                   formatted_link(dest_path) + "; " + \
-                   formatted_link(dest_path_eval) + "; " + \
-                   formatted_link(dest_path_script) + \
+                   formatted_link(nb_basename) + "; " + \
+                   formatted_link(rel_path_eval) + "; " + \
+                   formatted_link(rel_path_script) + \
                    ")"
 
         self.state_machine.insert_input([link_rst], rst_file)
@@ -104,29 +108,29 @@ def nb_to_html(nb_path):
 
     # http://imgur.com/eR9bMRH
     header = header.replace('<style', '<style scoped="scoped"')
-    header = header.replace('body{background-color:#ffffff;}\n', '')
-    header = header.replace('body{background-color:white;position:absolute;'
-                            'left:0px;right:0px;top:0px;bottom:0px;'
-                            'overflow:visible;}\n', '')
-    header = header.replace('body{margin:0;'
-                            'font-family:"Helvetica Neue",Helvetica,Arial,'
-                            'sans-serif;font-size:13px;line-height:20px;'
-                            'color:#000000;background-color:#ffffff;}', '')
-    header = header.replace('\na{color:#0088cc;text-decoration:none;}', '')
-    header = header.replace(
-        'a:focus{color:#005580;text-decoration:underline;}', '')
-    header = header.replace(
-        '\nh1,h2,h3,h4,h5,h6{margin:10px 0;font-family:inherit;font-weight:bold;'
-        'line-height:20px;color:inherit;text-rendering:optimizelegibility;}'
-        'h1 small,h2 small,h3 small,h4 small,h5 small,'
-        'h6 small{font-weight:normal;line-height:1;color:#999999;}'
-        '\nh1,h2,h3{line-height:40px;}\nh1{font-size:35.75px;}'
-        '\nh2{font-size:29.25px;}\nh3{font-size:22.75px;}'
-        '\nh4{font-size:16.25px;}\nh5{font-size:13px;}'
-        '\nh6{font-size:11.049999999999999px;}\nh1 small{font-size:22.75px;}'
-        '\nh2 small{font-size:16.25px;}\nh3 small{font-size:13px;}'
-        '\nh4 small{font-size:13px;}', '')
-    header = header.replace('background-color:#ffffff;', '', 1)
+    header = header.replace('body {\n  overflow: visible;\n  padding: 8px;\n}\n', '')
+    header = header.replace("code,pre{", "code{")
+
+    # Filter out styles that conflict with the sphinx theme.
+    filter_strings = [
+        'navbar',
+        'body{',
+        'alert{',
+        'uneditable-input{',
+        'collapse{',
+    ]
+    filter_strings.extend(['h%s{' % (i+1) for i in range(6)])
+
+    line_begin_strings = [
+        'pre{',
+        ]
+
+    header_lines = filter(
+        lambda x: not any([s in x for s in filter_strings]), header.split('\n'))
+    header_lines = filter(
+        lambda x: not any([x.startswith(s) for s in line_begin_strings]), header_lines)
+
+    header = '\n'.join(header_lines)
 
     # concatenate raw html lines
     lines = ['<div class="ipynotebook">']
@@ -135,15 +139,24 @@ def nb_to_html(nb_path):
     lines.append('</div>')
     return '\n'.join(lines)
 
-def evaluate_notebook(nb_path, dest_path=None):
+def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
     # Create evaluated version and save it to the dest path.
     # Always use --pylab so figures appear inline
     # perhaps this is questionable?
-    nb_runner = NotebookRunner(nb_in=nb_path, pylab=True)
-    nb_runner.run_notebook()
+    notebook = read(open(nb_path), 'json')
+    nb_runner = NotebookRunner(notebook, pylab=False)
+    try:
+        nb_runner.run_notebook(skip_exceptions=skip_exceptions)
+    except NotebookError as e:
+        print ''
+        print e
+        # Return the traceback, filtering out ANSI color codes.
+        # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
+        return 'Notebook conversion failed with the following traceback: \n%s' % \
+            re.sub(r'\\033[\[\]]([0-9]{1,2}([;@][0-9]{0,2})*)*[mKP]?', '', str(e))
     if dest_path is None:
         dest_path = 'temp_evaluated.ipynb'
-    nb_runner.save_notebook(dest_path)
+    write(nb_runner.nb, open(dest_path, 'w'), 'json')
     ret = nb_to_html(dest_path)
     if dest_path is 'temp_evaluated.ipynb':
         os.remove(dest_path)
