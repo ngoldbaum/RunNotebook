@@ -30,9 +30,11 @@ class NotebookDirective(Directive):
         if not self.state.document.settings.raw_enabled:
             raise self.warning('"%s" directive disabled.' % self.name)
 
+        cwd = os.getcwd()
+        tmpdir = tempfile.mkdtemp()
+        os.chdir(tmpdir)
+
         # get path to notebook
-        source_dir = os.path.dirname(
-            os.path.abspath(self.state.document.current_source))
         nb_filename = self.arguments[0]
         nb_basename = os.path.basename(nb_filename)
         rst_file = self.state_machine.document.attributes['source']
@@ -87,12 +89,9 @@ class NotebookDirective(Directive):
         # add dependency
         self.state.document.settings.record_dependencies.add(nb_abs_path)
 
-        # clean up png files left behind by notebooks.
-        png_files = glob.glob("*.png")
-        fits_files = glob.glob("*.fits")
-        h5_files = glob.glob("*.h5")
-        for file in png_files:
-            os.remove(file)
+        # clean up
+        os.chdir(cwd)
+        shutil.rmtree(tmpdir, True)
 
         return [nb_node]
 
