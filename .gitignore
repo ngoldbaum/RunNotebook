@@ -1,0 +1,3 @@
+example/build
+.ipynb_checkpoints
+*.pyc
