@@ -94,7 +94,3 @@ output. This includes the full notebook CSS which will probably conflict with
 your documentation theme. There are some monkeypatches to reduce the impact of
 the notebook CSS on the document, but it is like that the monkeypatching is
 fragile.
-
-Images are embedded directly in the document HTML, just as they are in an
-IPython notebook. This can easily create multi-megabytes pages that some web
-browsers have trouble with.
