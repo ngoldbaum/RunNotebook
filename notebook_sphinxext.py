@@ -48,7 +48,7 @@ class NotebookDirective(Directive):
         dest_dir = os.path.join(setup.app.builder.outdir, rel_dir)
         dest_path = os.path.join(dest_dir, nb_basename)
         image_dir = setup.app.builder.outdir+os.path.sep+'_images'
-        image_rel_dir = rel_dir + os.path.sep + '_images'
+        image_rel_dir = os.path.relpath(setup.confdir, rst_dir) + os.path.sep + '_images'
         if not os.path.exists(image_dir):
             os.makedirs(image_dir)
         if not os.path.exists(dest_dir):
