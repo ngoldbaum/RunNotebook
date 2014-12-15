@@ -14,6 +14,18 @@ This is a notebook
 
 .. notebook:: example.ipynb
 
+This is a notebook cell
+-----------------------
+
+.. notebook-cell::
+
+   %matplotlib inline
+   from matplotlib import pyplot as plt
+
+   plt.plot([1,2,3], [4,8,16])
+
+   plt.show()
+
 This is another notebook
 ------------------------
 
