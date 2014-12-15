@@ -9,8 +9,25 @@ Welcome to RunNotebook_example's documentation!
 .. toctree::
    :maxdepth: 2
 
+This is a notebook
+------------------
+
 .. notebook:: example.ipynb
 
+This is another notebook
+------------------------
+
+.. notebook:: custom-display-logic.ipynb
+
+This is a third notebook
+------------------------
+
+.. notebook:: typesetting-math-using-mathjax.ipynb
+
+One more:
+---------
+
+.. notebook:: SymPy.ipynb
 
 Indices and tables
 ==================
