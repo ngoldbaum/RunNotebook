@@ -28,17 +28,21 @@ into a single document. It's tempting to include notebooks into documentation
 wholesale. However, there are some issues with this approach as
 well. Versioning notebooks is difficult - output can change and if the notebook
 output contains large amounts of data, the diffs can easily grow quickly,
-producing an inconveniently large repository. Versioning evluated notebooks also
-offers no guarantee that the code in the notebook is still functional.
+producing an inconveniently large repository. In addition, updating the 
+notebook requires manually re-evaluating all the notebook cells, saving the 
+notebook, and making a commit if anything changes.  Versioning evluated 
+notebooks also offers no guarantee that the code in the notebook is still 
+functional - a real concern with a notebook documenting an evolving codebase
+with imperfect test coverage.
 
 ## Using Sphinx Extensions to Automate Notebook Running
 
-The extension included in this package make it easy to include unevaluated
-notebooks or short python code snippets inside of documentation. The extension
+The extensions included in this package make it easy to include unevaluated
+notebooks or short python code snippets inside of documentation. Both extensions
 make use of [runipy](https://github.com/paulgb/runipy) to script the evaluation
 of notebooks and
 [nbconvert](http://ipython.org/ipython-doc/rel-1.1.0/interactive/nbconvert.html)
-to conver the resulting evaluated notebooks into HTML suitable for embedding in
+to convert the resulting evaluated notebooks into HTML suitable for embedding in
 a Sphinx document.
 
 ## Dependencies
@@ -87,10 +91,14 @@ then embed the result in the document. Note that notebook-cell does not
 currently accept a user namespace, so all imports necessary for the code to run
 must be included in the source.
 
+See the `example` folder in the root of the repository for a full, working 
+example using a basic sphinx configuration.
+
 ## Known issues
 
 These extensions use a version of the 'full' HTML output from the nbconvert HTML
-output. This includes the full notebook CSS which will probably conflict with
-your documentation theme. There are some monkeypatches to reduce the impact of
-the notebook CSS on the document, but it is like that the monkeypatching is
-fragile.
+output. This includes the full notebook CSS. There's some CSS monkeypatching that 
+happens to reduce the impact of the notebook CSS on the document, which might 
+conflict with your documentation theme. If it turns out that the monkeypatching
+is fragile and there are visual issues in your preferred docs theme, please let me
+know by opening a github issue.
