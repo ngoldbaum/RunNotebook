@@ -1,4 +1,5 @@
 import errno
+import nbformat
 import os
 import shutil
 import string
@@ -8,10 +9,10 @@ import uuid
 from sphinx.util.compat import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
-from IPython.config import Config
-from IPython.nbconvert import html, python
-from IPython.nbformat import current as nbformat
+from traitlets.config import Config
+from nbconvert import html, python
 from runipy.notebook_runner import NotebookRunner, NotebookError
+
 
 class NotebookDirective(Directive):
     """Insert an evaluated notebook into a document
@@ -24,11 +25,13 @@ class NotebookDirective(Directive):
     option_spec = {'skip_exceptions': directives.flag}
     final_argument_whitespace = True
 
-    def run(self): # check if there are spaces in the notebook name
+    def run(self):  # check if there are spaces in the notebook name
         nb_path = self.arguments[0]
-        if ' ' in nb_path: raise ValueError(
-            "Due to issues with docutils stripping spaces from links, white "
-            "space is not allowed in notebook filenames '{0}'".format(nb_path))
+        if ' ' in nb_path:
+            raise ValueError(
+                "Due to issues with docutils stripping spaces from links, white "
+                "space is not allowed in notebook filenames '{0}'".format(
+                    nb_path))
         # check if raw html is supported
         if not self.state.document.settings.raw_enabled:
             raise self.warning('"%s" directive disabled.' % self.name)
@@ -105,21 +108,23 @@ class NotebookDirective(Directive):
 class notebook_node(nodes.raw):
     pass
 
+
 def nb_to_python(nb_path):
     """convert notebook to python script"""
     exporter = python.PythonExporter()
     output, resources = exporter.from_filename(nb_path)
     return output
 
+
 def nb_to_html(nb_path):
     """convert notebook to html"""
-    c = Config({'ExtractOutputPreprocessor':{'enabled':True}})
+    c = Config({'ExtractOutputPreprocessor': {'enabled': True}})
 
     exporter = html.HTMLExporter(template_file='full', config=c)
-    notebook = nbformat.read(open(nb_path), 'json')
+    notebook = nbformat.read(open(nb_path), nbformat.NO_CONVERT)
     output, resources = exporter.from_notebook_node(notebook)
-    header = output.split('<head>', 1)[1].split('</head>',1)[0]
-    body = output.split('<body>', 1)[1].split('</body>',1)[0]
+    header = output.split('<head>', 1)[1].split('</head>', 1)[0]
+    body = output.split('<body>', 1)[1].split('</body>', 1)[0]
 
     # http://imgur.com/eR9bMRH
     header = header.replace('<style', '<style scoped="scoped"')
@@ -158,9 +163,10 @@ def nb_to_html(nb_path):
     lines.append('</div>')
     return '\n'.join(lines), resources
 
+
 def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
     # Create evaluated version and save it to the dest path.
-    notebook = nbformat.read(open(nb_path), 'json')
+    notebook = nbformat.read(open(nb_path), nbformat.NO_CONVERT)
     nb_runner = NotebookRunner(notebook, pylab=False)
     try:
         nb_runner.run_notebook(skip_exceptions=skip_exceptions)
@@ -182,14 +188,18 @@ def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
         os.remove(dest_path)
     return ret
 
+
 def formatted_link(path):
     return "`%s <%s>`__" % (os.path.basename(path), path)
+
 
 def visit_notebook_node(self, node):
     self.visit_raw(node)
 
+
 def depart_notebook_node(self, node):
     self.depart_raw(node)
+
 
 def setup(app):
     setup.app = app
@@ -209,12 +219,14 @@ def setup(app):
 
     return retdict
 
+
 def make_image_dir(setup, rst_dir):
     image_dir = setup.app.builder.outdir + os.path.sep + '_images'
     rel_dir = os.path.relpath(setup.confdir, rst_dir)
     image_rel_dir = rel_dir + os.path.sep + '_images'
     thread_safe_mkdir(image_dir)
     return image_dir, image_rel_dir
+
 
 def write_notebook_output(resources, image_dir, image_rel_dir, evaluated_text):
     my_uuid = uuid.uuid4().hex
@@ -226,6 +238,7 @@ def write_notebook_output(resources, image_dir, image_rel_dir, evaluated_text):
         with open(new_name, 'wb') as f:
             f.write(resources['outputs'][output])
     return evaluated_text
+
 
 def thread_safe_mkdir(dirname):
     try:

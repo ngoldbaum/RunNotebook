@@ -1,10 +1,10 @@
 import os
 import shutil
 import io
+import nbformat
 import tempfile
 from sphinx.util.compat import Directive
 from docutils.parsers.rst import directives
-from IPython.nbformat import current
 from notebook_sphinxext import \
     notebook_node, visit_notebook_node, depart_notebook_node, \
     evaluate_notebook, make_image_dir, write_notebook_output
@@ -82,6 +82,6 @@ def setup(app):
 
 def convert_to_ipynb(py_file, ipynb_file):
     with io.open(py_file, 'r', encoding='utf-8') as f:
-        notebook = current.reads(f.read(), format='py')
+        notebook = nbformat.reads(f.read(), format='py')
     with io.open(ipynb_file, 'w', encoding='utf-8') as f:
-        current.write(notebook, f, format='ipynb')
+        nbformat.write(notebook, f, format='ipynb')
