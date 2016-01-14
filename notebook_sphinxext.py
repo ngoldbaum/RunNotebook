@@ -3,7 +3,6 @@ import nbformat
 import os
 import shutil
 import string
-import re
 import tempfile
 import uuid
 from sphinx.util.compat import Directive
@@ -11,7 +10,6 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from traitlets.config import Config
 from nbconvert import html, python
-from runipy.notebook_runner import NotebookRunner, NotebookError
 
 
 class NotebookDirective(Directive):
@@ -116,11 +114,22 @@ def nb_to_python(nb_path):
     return output
 
 
-def nb_to_html(nb_path):
+def nb_to_html(nb_path, skip_exceptions):
     """convert notebook to html"""
-    c = Config({'ExtractOutputPreprocessor': {'enabled': True}})
 
-    exporter = html.HTMLExporter(template_file='full', config=c)
+    nbconvert_config = Config({
+        'ExtractOutputPreprocessor': {'enabled': True},
+        'ExecutePreprocessor': {
+            'enabled': True,
+            # make this configurable?
+            'timeout': 3600,
+        }
+    })
+
+    if skip_exceptions is False:
+        nbconvert_config['ExecutePreprocessor']['allow_errors'] = True
+
+    exporter = html.HTMLExporter(template_file='full', config=nbconvert_config)
     notebook = nbformat.read(open(nb_path), nbformat.NO_CONVERT)
     output, resources = exporter.from_notebook_node(notebook)
     header = output.split('<head>', 1)[1].split('</head>', 1)[0]
@@ -128,8 +137,8 @@ def nb_to_html(nb_path):
 
     # http://imgur.com/eR9bMRH
     header = header.replace('<style', '<style scoped="scoped"')
-    header = header.replace('body {\n  overflow: visible;\n  padding: 8px;\n}\n',
-                            '')
+    header = header.replace(
+        'body {\n  overflow: visible;\n  padding: 8px;\n}\n', '')
     header = header.replace("code,pre{", "code{")
 
     # Filter out styles that conflict with the sphinx theme.
@@ -141,7 +150,7 @@ def nb_to_html(nb_path):
         'collapse{',
     ]
 
-    filter_strings.extend(['h%s{' % (i+1) for i in range(6)])
+    #filter_strings.extend(['h%s{' % (i+1) for i in range(6)])
 
     line_begin = [
         'pre{',
@@ -161,32 +170,15 @@ def nb_to_html(nb_path):
     lines.append(header)
     lines.append(body)
     lines.append('</div>')
-    return '\n'.join(lines), resources
+    return '\n'.join(lines), resources, notebook
 
 
-def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
+def evaluate_notebook(nb_path, dest_path, skip_exceptions=True):
     # Create evaluated version and save it to the dest path.
-    notebook = nbformat.read(open(nb_path), nbformat.NO_CONVERT)
-    nb_runner = NotebookRunner(notebook, pylab=False)
-    try:
-        nb_runner.run_notebook(skip_exceptions=skip_exceptions)
-    except NotebookError as e:
-        print ''
-        print e
-        # Return the traceback, filtering out ANSI color codes.
-        # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
-        return "Notebook conversion failed with the " \
-               "following traceback: \n%s" % \
-            re.sub(r'\\033[\[\]]([0-9]{1,2}([;@][0-9]{0,2})*)*[mKP]?', '',
-                   str(e))
-
-    if dest_path is None:
-        dest_path = 'temp_evaluated.ipynb'
-    nbformat.write(nb_runner.nb, open(dest_path, 'w'), 'json')
-    ret = nb_to_html(dest_path)
-    if dest_path is 'temp_evaluated.ipynb':
-        os.remove(dest_path)
-    return ret
+    lines, resources, notebook = nb_to_html(nb_path, skip_exceptions)
+    with open(dest_path, 'w') as fp:
+        nbformat.write(notebook, fp)
+    return lines, resources
 
 
 def formatted_link(path):

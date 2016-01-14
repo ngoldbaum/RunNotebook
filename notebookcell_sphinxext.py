@@ -45,7 +45,8 @@ class NotebookCellDirective(Directive):
         skip_exceptions = 'skip_exceptions' in self.options
 
         evaluated_text, resources = evaluate_notebook(
-            'temp.ipynb', skip_exceptions=skip_exceptions)
+            'temp.ipynb', 'temp_evaluated.ipynb',
+            skip_exceptions=skip_exceptions)
 
         evaluated_text = write_notebook_output(
             resources, image_dir, image_rel_dir, evaluated_text)
@@ -81,7 +82,21 @@ def setup(app):
     return retdict
 
 def convert_to_ipynb(py_file, ipynb_file):
-    with io.open(py_file, 'r', encoding='utf-8') as f:
-        notebook = nbformat.reads(f.read(), format='py')
+    notebook = py_to_nb(py_file)
     with io.open(ipynb_file, 'w', encoding='utf-8') as f:
-        nbformat.write(notebook, f, format='ipynb')
+        nbformat.write(notebook, f)
+
+
+def py_to_nb(fname):
+    """converts a .py file into a properly formatted .ipynb file
+
+    Adopted (albeit substantially simplified) from
+    http://stackoverflow.com/a/32994192/1382869
+    """
+    cells = []
+    with open(fname, "r") as f:
+        lines = f.readlines()
+        cells.append(nbformat.v4.new_code_cell(lines))
+
+    return nbformat.v4.new_notebook(
+        cells=cells, metadata={'language': 'python'})
