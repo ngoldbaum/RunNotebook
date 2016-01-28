@@ -129,7 +129,7 @@ def nb_to_html(nb_path, skip_exceptions):
         nbconvert_config['ExecutePreprocessor']['allow_errors'] = True
 
     exporter = html.HTMLExporter(template_file='full', config=nbconvert_config)
-    notebook = nbformat.read(open(nb_path), nbformat.NO_CONVERT)
+    notebook = nbformat.read(nb_path, nbformat.NO_CONVERT)
     output, resources = exporter.from_notebook_node(notebook)
     header = output.split('<head>', 1)[1].split('</head>', 1)[0]
     body = output.split('<body>', 1)[1].split('</body>', 1)[0]
