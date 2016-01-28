@@ -1,2 +1,2 @@
-import notebook_sphinxext
-import notebookcell_sphinxext
+from . import notebook_sphinxext
+from . import notebookcell_sphinxext

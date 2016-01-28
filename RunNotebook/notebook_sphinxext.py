@@ -2,7 +2,6 @@ import errno
 import nbformat
 import os
 import shutil
-import string
 import tempfile
 import uuid
 from sphinx.util.compat import Directive
@@ -59,15 +58,15 @@ class NotebookDirective(Directive):
         shutil.copyfile(nb_abs_path, dest_path)
 
         # Construct paths to versions getting copied over
-        dest_path_eval = string.replace(dest_path, '.ipynb', '_evaluated.ipynb')
-        dest_path_script = string.replace(dest_path, '.ipynb', '.py')
-        rel_path_eval = string.replace(nb_basename, '.ipynb', '_evaluated.ipynb')
-        rel_path_script = string.replace(nb_basename, '.ipynb', '.py')
+        dest_path_eval = dest_path.replace('.ipynb', '_evaluated.ipynb')
+        dest_path_script = dest_path.replace('.ipynb', '.py')
+        rel_path_eval = nb_basename.replace('.ipynb', '_evaluated.ipynb')
+        rel_path_script = nb_basename.replace('.ipynb', '.py')
 
         # Create python script vesion
         script_text = nb_to_python(nb_abs_path)
         f = open(dest_path_script, 'w')
-        f.write(script_text.encode('utf8'))
+        f.write(script_text)
         f.close()
 
         skip_exceptions = 'skip_exceptions' in self.options
