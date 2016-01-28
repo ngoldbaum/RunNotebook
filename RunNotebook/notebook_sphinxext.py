@@ -175,8 +175,7 @@ def nb_to_html(nb_path, skip_exceptions):
 def evaluate_notebook(nb_path, dest_path, skip_exceptions=True):
     # Create evaluated version and save it to the dest path.
     lines, resources, notebook = nb_to_html(nb_path, skip_exceptions)
-    with open(dest_path, 'w') as fp:
-        nbformat.write(notebook, fp)
+    nbformat.write(notebook, dest_path)
     return lines, resources
 
 
