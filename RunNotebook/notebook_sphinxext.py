@@ -65,8 +65,8 @@ class NotebookDirective(Directive):
 
         # Create python script vesion
         script_text = nb_to_python(nb_abs_path)
-        f = open(dest_path_script, 'w')
-        f.write(script_text)
+        f = open(dest_path_script, 'wb')
+        f.write(script_text.encode('utf8'))
         f.close()
 
         skip_exceptions = 'skip_exceptions' in self.options
