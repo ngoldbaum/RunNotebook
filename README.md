@@ -1,5 +1,16 @@
 # Notebook sphinx extensions
 
+## Installation
+
+This package is available on pypi: https://pypi.python.org/pypi/RunNotebook
+
+Install it using pip:
+
+    $ pip install RunNotebook
+
+Take a look at the `conf.py` file in the example sphinx project to see how to 
+integrate with your sphinx build.
+
 ## Code snippets in documentation
 
 This packages two useful [Sphinx](http://sphinx-doc.org/) extensions: `notebook`
