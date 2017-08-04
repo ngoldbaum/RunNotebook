@@ -8,7 +8,7 @@ from sphinx.util.compat import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
 from traitlets.config import Config
-from nbconvert import html, python
+from nbconvert import html, python, notebook as notebook_exporter
 
 
 class NotebookDirective(Directive):
@@ -116,7 +116,7 @@ def nb_to_python(nb_path):
 def nb_to_html(nb_path, skip_exceptions):
     """convert notebook to html"""
 
-    nbconvert_config = Config({
+    nbconvert_config_html = Config({
         'ExtractOutputPreprocessor': {'enabled': True},
         'ExecutePreprocessor': {
             'enabled': True,
@@ -125,14 +125,26 @@ def nb_to_html(nb_path, skip_exceptions):
         }
     })
 
-    if skip_exceptions is False:
-        nbconvert_config['ExecutePreprocessor']['allow_errors'] = True
+    nbconvert_config_nb = Config({
+        'ExecutePreprocessor': {
+            'enabled': True,
+            # make this configurable?
+            'timeout': 3600,
+        }
+    })
 
-    exporter = html.HTMLExporter(template_file='full', config=nbconvert_config)
+    if skip_exceptions is False:
+        nbconvert_config_html['ExecutePreprocessor']['allow_errors'] = True
+        nbconvert_config_nb['ExecutePreprocessor']['allow_errors'] = True
+
+    hexporter = html.HTMLExporter(
+        template_file='full', config=nbconvert_config_html)
+    nexporter = notebook_exporter.NotebookExporter(config=nbconvert_config_nb)
     notebook = nbformat.read(nb_path, nbformat.NO_CONVERT)
-    output, resources = exporter.from_notebook_node(notebook)
-    header = output.split('<head>', 1)[1].split('</head>', 1)[0]
-    body = output.split('<body>', 1)[1].split('</body>', 1)[0]
+    houtput, hresources = hexporter.from_notebook_node(notebook)
+    noutput, _ = nexporter.from_notebook_node(notebook)
+    header = houtput.split('<head>', 1)[1].split('</head>', 1)[0]
+    body = houtput.split('<body>', 1)[1].split('</body>', 1)[0]
 
     # http://imgur.com/eR9bMRH
     header = header.replace('<style', '<style scoped="scoped"')
@@ -148,8 +160,6 @@ def nb_to_html(nb_path, skip_exceptions):
         'uneditable-input{',
         'collapse{',
     ]
-
-    #filter_strings.extend(['h%s{' % (i+1) for i in range(6)])
 
     line_begin = [
         'pre{',
@@ -169,13 +179,14 @@ def nb_to_html(nb_path, skip_exceptions):
     lines.append(header)
     lines.append(body)
     lines.append('</div>')
-    return '\n'.join(lines), resources, notebook
+    return '\n'.join(lines), hresources, noutput
 
 
 def evaluate_notebook(nb_path, dest_path, skip_exceptions=True):
     # Create evaluated version and save it to the dest path.
     lines, resources, notebook = nb_to_html(nb_path, skip_exceptions)
-    nbformat.write(notebook, dest_path)
+    with open(dest_path, 'w') as f:
+        f.write(notebook)
     return lines, resources
 
 
