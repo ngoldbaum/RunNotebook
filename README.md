@@ -33,7 +33,7 @@ While this does produce a syntax highlighted python script embedded in a sphinx
 document, it does not run the code or provide any facilities for checking whether
 the code is correct.
 
-[IPython](http://ipython.org) notebooks offer a powerful environment for
+[Jupyter](http://jupyter.org) notebooks offer a powerful environment for
 literate programming, with code input, output, and explanatary text embedded
 into a single document. It's tempting to include notebooks into documentation
 wholesale. However, there are some issues with this approach as
@@ -50,20 +50,15 @@ with imperfect test coverage.
 
 The extensions included in this package make it easy to include unevaluated
 notebooks or short python code snippets inside of documentation. Both extensions
-make use of [runipy](https://github.com/paulgb/runipy) to script the evaluation
-of notebooks and
-[nbconvert](http://ipython.org/ipython-doc/rel-1.1.0/interactive/nbconvert.html)
-to convert the resulting evaluated notebooks into HTML suitable for embedding in
-a Sphinx document.
+make use of [nbconvert](http://nbconvert.readthedocs.io/) to script the
+evaluation of notebooks and to convert the resulting evaluated notebooks into
+HTML suitable for embedding in a Sphinx document.
 
 ## Dependencies
 
-This extension has two required dependencies:
+This extension depends on `Jupyter`.
 
-* runipy
-* IPython
-
-Note that all IPython dependencies (even the optional ones) must be
+Note that all `Jupyter` dependencies (even the optional ones) must be
 installed. In particular, [pandoc](http://johnmacfarlane.net/pandoc/) and
 [node.js](http://nodejs.org/) must be available since these are used by
 nbconvert.
@@ -108,8 +103,8 @@ example using a basic sphinx configuration.
 ## Known issues
 
 These extensions use a version of the 'full' HTML output from the nbconvert HTML
-output. This includes the full notebook CSS. There's some CSS monkeypatching that 
-happens to reduce the impact of the notebook CSS on the document, which might 
-conflict with your documentation theme. If it turns out that the monkeypatching
-is fragile and there are visual issues in your preferred docs theme, please let me
-know by opening a github issue.
+output. This includes the full notebook CSS. There's some CSS monkeypatching
+that happens to reduce the impact of the notebook CSS on the document, which
+might conflict with your documentation theme. If it turns out that the
+monkeypatching is fragile and there are visual issues in your preferred docs
+theme, please let me know by opening a github issue.
