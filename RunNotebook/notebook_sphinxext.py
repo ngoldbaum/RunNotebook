@@ -118,11 +118,6 @@ def nb_to_html(nb_path, skip_exceptions):
 
     nbconvert_config_html = Config({
         'ExtractOutputPreprocessor': {'enabled': True},
-        'ExecutePreprocessor': {
-            'enabled': True,
-            # make this configurable?
-            'timeout': 3600,
-        }
     })
 
     nbconvert_config_nb = Config({
@@ -130,19 +125,19 @@ def nb_to_html(nb_path, skip_exceptions):
             'enabled': True,
             # make this configurable?
             'timeout': 3600,
-        }
+        },
     })
 
     if skip_exceptions is False:
-        nbconvert_config_html['ExecutePreprocessor']['allow_errors'] = True
         nbconvert_config_nb['ExecutePreprocessor']['allow_errors'] = True
 
     hexporter = html.HTMLExporter(
         template_file='full', config=nbconvert_config_html)
     nexporter = notebook_exporter.NotebookExporter(config=nbconvert_config_nb)
     notebook = nbformat.read(nb_path, nbformat.NO_CONVERT)
-    houtput, hresources = hexporter.from_notebook_node(notebook)
     noutput, _ = nexporter.from_notebook_node(notebook)
+    eval_notebook = nbformat.reads(noutput, nbformat.NO_CONVERT)
+    houtput, hresources = hexporter.from_notebook_node(eval_notebook)
     header = houtput.split('<head>', 1)[1].split('</head>', 1)[0]
     body = houtput.split('<body>', 1)[1].split('</body>', 1)[0]
 
