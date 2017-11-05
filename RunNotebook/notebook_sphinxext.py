@@ -78,13 +78,14 @@ class NotebookDirective(Directive):
             resources, image_dir, image_rel_dir, evaluated_text)
 
         # Create link to notebook and script files
-        link_rst = "(" + \
-                   formatted_link(nb_basename) + "; " + \
-                   formatted_link(rel_path_eval) + "; " + \
-                   formatted_link(rel_path_script) + \
-                   ")"
+        if setup.config.run_notebook_display_source_links:
+            link_rst = "(" + \
+                       formatted_link(nb_basename) + "; " + \
+                       formatted_link(rel_path_eval) + "; " + \
+                       formatted_link(rel_path_script) + \
+                       ")"
 
-        self.state_machine.insert_input([link_rst], rst_file)
+            self.state_machine.insert_input([link_rst], rst_file)
 
         # create notebook node
         attributes = {'format': 'html', 'source': 'nb_path'}
@@ -207,6 +208,8 @@ def setup(app):
     setup.confdir = app.confdir
 
     app.add_config_value('run_notebook_export_template', 'full',
+                         rebuild='html')
+    app.add_config_value('run_notebook_display_source_links', True,
                          rebuild='html')
 
     app.add_node(notebook_node,
