@@ -6,7 +6,30 @@ This package is available on pypi: https://pypi.python.org/pypi/RunNotebook
 
 Install it using pip:
 
-    $ pip install RunNotebook
+    pip install RunNotebook
+
+Add the extension to your `conf.py`:
+
+    extensions = [
+        # Import both
+        'RunNotebook',
+        
+        # or import each directive individually
+        # 'RunNotebook.notebook_sphinxext',
+        # 'RunNotebook.notebookcell_sphinxext',
+        # ...
+    ]
+
+Optional configuration in your `conf.py`:
+
+    # Run notebook configuration
+
+    # The template used when exporting from nbconvert
+    #
+    # full  - Outputs the full HTML document [Default]
+    # basic - Outputs a single div (with no additional resources)
+    #
+    run_notebook_export_template = 'basic'  # Default: 'full'
 
 Take a look at the `conf.py` file in the example sphinx project to see how to 
 integrate with your sphinx build.

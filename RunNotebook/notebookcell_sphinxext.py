@@ -63,13 +63,15 @@ class NotebookCellDirective(Directive):
 
         return [nb_node]
 
+
 def setup(app):
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
 
     app.add_node(notebook_node,
-                 html=(visit_notebook_node, depart_notebook_node))
+                 html=(visit_notebook_node, depart_notebook_node),
+                 override=True)
 
     app.add_directive('notebook-cell', NotebookCellDirective)
 
