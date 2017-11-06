@@ -78,13 +78,14 @@ class NotebookDirective(Directive):
             resources, image_dir, image_rel_dir, evaluated_text)
 
         # Create link to notebook and script files
-        link_rst = "(" + \
-                   formatted_link(nb_basename) + "; " + \
-                   formatted_link(rel_path_eval) + "; " + \
-                   formatted_link(rel_path_script) + \
-                   ")"
+        if setup.config.run_notebook_display_source_links:
+            link_rst = "(" + \
+                       formatted_link(nb_basename) + "; " + \
+                       formatted_link(rel_path_eval) + "; " + \
+                       formatted_link(rel_path_script) + \
+                       ")"
 
-        self.state_machine.insert_input([link_rst], rst_file)
+            self.state_machine.insert_input([link_rst], rst_file)
 
         # create notebook node
         attributes = {'format': 'html', 'source': 'nb_path'}
@@ -131,49 +132,53 @@ def nb_to_html(nb_path, skip_exceptions):
     if skip_exceptions is False:
         nbconvert_config_nb['ExecutePreprocessor']['allow_errors'] = True
 
+    template = setup.config.run_notebook_export_template
+
     hexporter = html.HTMLExporter(
-        template_file='full', config=nbconvert_config_html)
+        template_file=template, config=nbconvert_config_html)
     nexporter = notebook_exporter.NotebookExporter(config=nbconvert_config_nb)
     notebook = nbformat.read(nb_path, nbformat.NO_CONVERT)
     noutput, _ = nexporter.from_notebook_node(notebook)
     eval_notebook = nbformat.reads(noutput, nbformat.NO_CONVERT)
     houtput, hresources = hexporter.from_notebook_node(eval_notebook)
-    header = houtput.split('<head>', 1)[1].split('</head>', 1)[0]
-    body = houtput.split('<body>', 1)[1].split('</body>', 1)[0]
 
-    # http://imgur.com/eR9bMRH
-    header = header.replace('<style', '<style scoped="scoped"')
-    header = header.replace(
-        'body {\n  overflow: visible;\n  padding: 8px;\n}\n', '')
-    header = header.replace("code,pre{", "code{")
+    if template == 'basic':
+        header_lines = []
+        body = houtput
+    else:
+        header = houtput.split('<head>', 1)[1].split('</head>', 1)[0]
+        body = houtput.split('<body>', 1)[1].split('</body>', 1)[0]
 
-    # Filter out styles that conflict with the sphinx theme.
-    filter_strings = [
-        'navbar',
-        'body{',
-        'alert{',
-        'uneditable-input{',
-        'collapse{',
-    ]
+        # http://imgur.com/eR9bMRH
+        header = header.replace('<style', '<style scoped="scoped"')
+        header = header.replace(
+            'body {\n  overflow: visible;\n  padding: 8px;\n}\n', '')
+        header = header.replace("code,pre{", "code{")
 
-    line_begin = [
-        'pre{',
-        'p{margin'
-    ]
+        # Filter out styles that conflict with the sphinx theme.
+        filter_strings = [
+            'navbar',
+            'body{',
+            'alert{',
+            'uneditable-input{',
+            'collapse{',
+        ]
 
-    filterfunc = lambda x: not any([s in x for s in filter_strings])
-    header_lines = filter(filterfunc, header.split('\n'))
+        line_begin = [
+            'pre{',
+            'p{margin'
+        ]
 
-    filterfunc = lambda x: not any([x.startswith(s) for s in line_begin])
-    header_lines = filter(filterfunc, header_lines)
+        filterfunc = lambda x: not any([s in x for s in filter_strings])
+        header_lines = filter(filterfunc, header.split('\n'))
+
+        filterfunc = lambda x: not any([x.startswith(s) for s in line_begin])
+        header_lines = filter(filterfunc, header_lines)
 
     header = '\n'.join(header_lines)
 
     # concatenate raw html lines
-    lines = ['<div class="ipynotebook">']
-    lines.append(header)
-    lines.append(body)
-    lines.append('</div>')
+    lines = ['<div class="ipynotebook">', header, body, '</div>']
     return '\n'.join(lines), hresources, noutput
 
 
@@ -202,8 +207,14 @@ def setup(app):
     setup.config = app.config
     setup.confdir = app.confdir
 
+    app.add_config_value('run_notebook_export_template', 'full',
+                         rebuild='html')
+    app.add_config_value('run_notebook_display_source_links', True,
+                         rebuild='html')
+
     app.add_node(notebook_node,
-                 html=(visit_notebook_node, depart_notebook_node))
+                 html=(visit_notebook_node, depart_notebook_node),
+                 override=True)
 
     app.add_directive('notebook', NotebookDirective)
 
