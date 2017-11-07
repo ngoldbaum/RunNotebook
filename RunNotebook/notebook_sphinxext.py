@@ -7,6 +7,7 @@ import uuid
 from sphinx.util.compat import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
+from distutils.dir_util import copy_tree
 from traitlets.config import Config
 from nbconvert import html, python, notebook as notebook_exporter
 
@@ -56,6 +57,9 @@ class NotebookDirective(Directive):
 
         # Copy unevaluated notebook
         shutil.copyfile(nb_abs_path, dest_path)
+
+        # Copy files in directory to our tmpdir (datasets)
+        copy_tree(os.path.dirname(nb_abs_path), tmpdir)
 
         # Construct paths to versions getting copied over
         dest_path_eval = dest_path.replace('.ipynb', '_evaluated.ipynb')
