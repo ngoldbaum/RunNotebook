@@ -33,7 +33,7 @@ class NotebookCellDirective(Directive):
         rst_file = self.state_machine.document.attributes['source']
         rst_dir = os.path.abspath(os.path.dirname(rst_file))
 
-        image_dir, image_rel_dir = make_image_dir(setup, rst_dir)
+        image_dir, image_rel_dir = make_image_dir(setup, rst_dir, rst_file)
 
         # Construct notebook from cell content
         content = "\n".join(self.content)
