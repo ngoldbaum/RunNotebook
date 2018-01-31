@@ -50,7 +50,7 @@ class NotebookDirective(Directive):
         dest_dir = os.path.join(setup.app.builder.outdir, rel_dir)
         dest_path = os.path.join(dest_dir, nb_basename)
 
-        image_dir, image_rel_dir = make_image_dir(setup, rst_dir)
+        image_dir, image_rel_dir = make_image_dir(setup, rst_dir, rst_file)
 
         # Ensure desination build directory exists
         thread_safe_mkdir(os.path.dirname(dest_path))
@@ -231,7 +231,10 @@ def setup(app):
     return retdict
 
 
-def make_image_dir(setup, rst_dir):
+def make_image_dir(setup, rst_dir, rst_file):
+    # image dir path for dirhtml builder is one level up
+    if setup.app.builder.name == 'dirhtml':
+        rst_dir = rst_file[:-len('.rst')] + '/'
     image_dir = setup.app.builder.outdir + os.path.sep + '_images'
     rel_dir = os.path.relpath(setup.confdir, rst_dir)
     image_rel_dir = rel_dir + os.path.sep + '_images'
