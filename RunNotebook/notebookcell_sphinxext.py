@@ -3,8 +3,7 @@ import shutil
 import io
 import nbformat
 import tempfile
-from sphinx.util.compat import Directive
-from docutils.parsers.rst import directives
+from docutils.parsers.rst import directives, Directive
 from RunNotebook.notebook_sphinxext import \
     notebook_node, visit_notebook_node, depart_notebook_node, \
     evaluate_notebook, make_image_dir, write_notebook_output

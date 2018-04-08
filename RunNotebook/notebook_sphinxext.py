@@ -4,9 +4,8 @@ import os
 import shutil
 import tempfile
 import uuid
-from sphinx.util.compat import Directive
 from docutils import nodes
-from docutils.parsers.rst import directives
+from docutils.parsers.rst import directives, Directive
 from distutils.dir_util import copy_tree
 from traitlets.config import Config
 from nbconvert import html, python, notebook as notebook_exporter
