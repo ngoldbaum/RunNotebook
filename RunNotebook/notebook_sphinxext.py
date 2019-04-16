@@ -7,6 +7,7 @@ import uuid
 from docutils import nodes
 from docutils.parsers.rst import directives, Directive
 from distutils.dir_util import copy_tree
+from io import open
 from traitlets.config import Config
 from nbconvert import html, python, notebook as notebook_exporter
 
@@ -188,7 +189,7 @@ def nb_to_html(nb_path, skip_exceptions):
 def evaluate_notebook(nb_path, dest_path, skip_exceptions=True):
     # Create evaluated version and save it to the dest path.
     lines, resources, notebook = nb_to_html(nb_path, skip_exceptions)
-    with open(dest_path, 'w') as f:
+    with open(dest_path, 'w', encoding='utf-8') as f:
         f.write(notebook)
     return lines, resources
 
