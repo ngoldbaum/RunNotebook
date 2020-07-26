@@ -118,7 +118,7 @@ def nb_to_python(nb_path):
     return output
 
 
-def nb_to_html(nb_path, skip_exceptions):
+def nb_to_html(nb_path, skip_exceptions, evaluate=True):
     """convert notebook to html"""
 
     nbconvert_config_html = Config({
@@ -127,7 +127,7 @@ def nb_to_html(nb_path, skip_exceptions):
 
     nbconvert_config_nb = Config({
         'ExecutePreprocessor': {
-            'enabled': True,
+            'enabled': evaluate,
             # make this configurable?
             'timeout': 3600,
         },
@@ -188,7 +188,10 @@ def nb_to_html(nb_path, skip_exceptions):
 
 def evaluate_notebook(nb_path, dest_path, skip_exceptions=True):
     # Create evaluated version and save it to the dest path.
-    lines, resources, notebook = nb_to_html(nb_path, skip_exceptions)
+    lines, resources, notebook = nb_to_html(
+        nb_path, skip_exceptions, evaluate=setup.config.evaluate_notebooks
+    )
+
     with open(dest_path, 'w', encoding='utf-8') as f:
         f.write(notebook)
     return lines, resources
@@ -215,6 +218,7 @@ def setup(app):
                          rebuild='html')
     app.add_config_value('run_notebook_display_source_links', True,
                          rebuild='html')
+    app.add_config_value('evaluate_notebooks', True, rebuild='html')
 
     app.add_node(notebook_node,
                  html=(visit_notebook_node, depart_notebook_node),
