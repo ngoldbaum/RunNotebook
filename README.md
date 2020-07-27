@@ -34,6 +34,9 @@ run_notebook_export_template = 'basic'  # Default: 'full'
 
 # Display the source links to the generated evaluated files
 run_notebook_display_source_links = False  # Default: True
+
+# Whether or not to evaluate the notebooks prior to embedding them
+evaluate_notebooks = False  # Default: True
 ```
 
 Take a look at the `conf.py` file in the example sphinx project to see how to 
