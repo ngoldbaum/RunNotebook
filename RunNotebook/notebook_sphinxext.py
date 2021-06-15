@@ -139,7 +139,7 @@ def nb_to_html(nb_path, skip_exceptions, evaluate=True):
     template = setup.config.run_notebook_export_template
 
     hexporter = html.HTMLExporter(
-        template_file=template, config=nbconvert_config_html)
+        template=template, config=nbconvert_config_html)
     nexporter = notebook_exporter.NotebookExporter(config=nbconvert_config_nb)
     notebook = nbformat.read(nb_path, nbformat.NO_CONVERT)
     noutput, _ = nexporter.from_notebook_node(notebook)
@@ -151,7 +151,11 @@ def nb_to_html(nb_path, skip_exceptions, evaluate=True):
         body = houtput
     else:
         header = houtput.split('<head>', 1)[1].split('</head>', 1)[0]
-        body = houtput.split('<body>', 1)[1].split('</body>', 1)[0]
+        # There may be classes and other modifications to this tag, and the
+        # specific class names may change.
+        body_open_start = houtput.find('<body')
+        body_open_end = houtput[body_open_start:].find('>')
+        body = houtput[body_open_start+body_open_end + 1:].split('</body>', 1)[0]
 
         # http://imgur.com/eR9bMRH
         header = header.replace('<style', '<style scoped="scoped"')
